@@ -1,33 +1,22 @@
 import type { MatchSchedule } from "./match-scheduler"
 
 export function validateMatchSchedule(schedule: MatchSchedule[], players: string[]): boolean {
-  // Check each week to ensure each player plays exactly once
+  const realPlayers = players.filter((p) => p !== "BYE")
+
   for (const week of schedule) {
-    const playersInWeek = new Set<string>()
-
-    for (const match of week.matches) {
-      playersInWeek.add(match.player1)
-      playersInWeek.add(match.player2)
-    }
-
-    // Check if all players are included exactly once
-    if (playersInWeek.size !== players.length) {
-      console.error(
-        `Week ${week.weekNumber}: Not all players are playing. Expected ${players.length}, got ${playersInWeek.size}`,
-      )
-      return false
-    }
-
-    // Check for duplicate players in the same week
     const playerCounts: Record<string, number> = {}
+
     for (const match of week.matches) {
-      playerCounts[match.player1] = (playerCounts[match.player1] || 0) + 1
-      playerCounts[match.player2] = (playerCounts[match.player2] || 0) + 1
+      const { player1, player2 } = match
+
+      if (player1 !== "BYE") playerCounts[player1] = (playerCounts[player1] || 0) + 1
+      if (player2 !== "BYE") playerCounts[player2] = (playerCounts[player2] || 0) + 1
     }
 
-    for (const player of players) {
-      if (playerCounts[player] !== 1) {
-        console.error(`Week ${week.weekNumber}: Player ${player} appears ${playerCounts[player] || 0} times`)
+    for (const player of realPlayers) {
+      const count = playerCounts[player] || 0
+      if (count !== 1) {
+        console.error(`Week ${week.weekNumber}: Player ${player} appears ${count} times`)
         return false
       }
     }
@@ -35,3 +24,4 @@ export function validateMatchSchedule(schedule: MatchSchedule[], players: string
 
   return true
 }
+

@@ -1,8 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -11,33 +9,8 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
 export default function AdminPage() {
-  const { data: session, status } = useSession()
   const [seedKey, setSeedKey] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const router = useRouter()
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await fetch("/api/auth/check-admin")
-        const data = await response.json()
-
-        setIsAdmin(data.isAdmin)
-
-        if (!data.isAdmin) {
-          router.push("/")
-        }
-      } catch (error) {
-        console.error("Error checking admin status:", error)
-        router.push("/")
-      }
-    }
-
-    if (status === "authenticated") {
-      checkAdminStatus()
-    }
-  }, [status, router])
 
   const handleSeedDatabase = async () => {
     if (!seedKey) {
@@ -60,19 +33,6 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  if (status === "loading") {
-    return <div className="text-center">Loading...</div>
-  }
-
-  if (status === "unauthenticated") {
-    router.push("/auth/signin")
-    return null
-  }
-
-  if (!isAdmin) {
-    return null // Will redirect in useEffect
   }
 
   return (

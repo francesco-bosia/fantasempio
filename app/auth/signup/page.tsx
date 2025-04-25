@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -11,15 +9,37 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PLAYERS } from "@/lib/players"
 
 export default function SignUp() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [playerName, setPlayerName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [availablePlayers, setAvailablePlayers] = useState<string[]>([])
   const router = useRouter()
 
-  const playerNames = ["Simo", "Sam", "Noe", "Marco", "Omar", "John", "Zeno", "Ogno"]
+  useEffect(() => {
+    async function fetchAvailablePlayers() {
+      try {
+        const response = await fetch("/api/users")
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.message || "Could not fetch users")
+        }
+
+        const takenPlayerNames = data.users.map((user: { playerName: string }) => user.playerName)
+        const available = PLAYERS.filter((player) => !takenPlayerNames.includes(player))
+        
+        setAvailablePlayers(available)
+      } catch (error) {
+        toast.error("Failed to fetch available players")
+      }
+    }
+
+    fetchAvailablePlayers()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,7 +65,6 @@ export default function SignUp() {
       }
 
       toast.success("Account created successfully")
-
       router.push("/auth/signin")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create account")
@@ -91,15 +110,21 @@ export default function SignUp() {
                   <SelectValue placeholder="Select your player name" />
                 </SelectTrigger>
                 <SelectContent>
-                  {playerNames.map((name) => (
-                    <SelectItem key={name} value={name}>
-                      {name}
+                  {availablePlayers.length > 0 ? (
+                    availablePlayers.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem disabled value="none">
+                      No players available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || availablePlayers.length === 0}>
               {isLoading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>

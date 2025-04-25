@@ -1,49 +1,30 @@
-import { getServerSession } from "next-auth/next"
-import { connectToDatabase } from "@/lib/mongodb"
-import User from "@/models/user"
+// lib/auth-utils.ts
+import { getToken } from "next-auth/jwt"
+import type { NextRequest } from "next/server"
 
-export async function isAdmin(req?: Request) {
-  try {
-    const session = await getServerSession()
-
-    if (!session || !session.user) {
-      return false
-    }
-
-    await connectToDatabase()
-
-    const user = await User.findOne({ email: session.user.email })
-
-    if (!user) {
-      return false
-    }
-
-    return user.role === "admin"
-  } catch (error) {
-    console.error("Error checking admin status:", error)
-    return false
+export async function getTokenSafe(req: NextRequest | Request) {
+  if ("nextUrl" in req) {
+    return await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   }
+
+  if (req instanceof Request) {
+    const headers = Object.fromEntries(req.headers.entries())
+    return await getToken({
+      req: { headers } as unknown as NextRequest,
+      secret: process.env.NEXTAUTH_SECRET,
+    })
+  }
+
+  return null
 }
 
-export async function getUserRole() {
-  try {
-    const session = await getServerSession()
 
-    if (!session || !session.user) {
-      return null
-    }
+export async function isAdmin(req: NextRequest | Request) {
+  const token = await getTokenSafe(req)
+  return token?.role === "admin"
+}
 
-    await connectToDatabase()
-
-    const user = await User.findOne({ email: session.user.email })
-
-    if (!user) {
-      return null
-    }
-
-    return user.role
-  } catch (error) {
-    console.error("Error getting user role:", error)
-    return null
-  }
+export async function getUserRole(req: NextRequest | Request): Promise<string | null> {
+  const token = await getTokenSafe(req)
+  return token?.role ?? null
 }

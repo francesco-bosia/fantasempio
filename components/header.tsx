@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signIn, signOut, useSession } from "next-auth/react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -17,29 +16,11 @@ import {
 import { LogOut, User, Settings } from "lucide-react"
 
 export default function Header() {
-  const pathname = usePathname()
   const { data: session, status } = useSession()
-  const [isAdmin, setIsAdmin] = useState(false)
+  const pathname = usePathname()
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (status === "authenticated") {
-        try {
-          const response = await fetch("/api/auth/check-admin")
-          const data = await response.json()
-          setIsAdmin(data.isAdmin)
-        } catch (error) {
-          console.error("Error checking admin status:", error)
-        }
-      }
-    }
-
-    checkAdminStatus()
-  }, [status])
-
-  const isActive = (path: string) => {
-    return pathname === path
-  }
+  const isActive = (path: string) => pathname === path
+  const isAdmin = session?.user?.role === "admin"
 
   return (
     <header className="border-b">
@@ -51,34 +32,26 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-6">
             <Link
               href="/input"
-              className={`text-sm font-medium transition-colors ${
-                isActive("/input") ? "text-primary" : "text-muted-foreground hover:text-primary"
-              }`}
+              className={`text-sm font-medium transition-colors ${isActive("/input") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
             >
               Log Substance
             </Link>
             <Link
               href="/standings"
-              className={`text-sm font-medium transition-colors ${
-                isActive("/standings") ? "text-primary" : "text-muted-foreground hover:text-primary"
-              }`}
+              className={`text-sm font-medium transition-colors ${isActive("/standings") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
             >
               Standings
             </Link>
             <Link
               href="/statistics"
-              className={`text-sm font-medium transition-colors ${
-                isActive("/statistics") ? "text-primary" : "text-muted-foreground hover:text-primary"
-              }`}
+              className={`text-sm font-medium transition-colors ${isActive("/statistics") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
             >
               Statistics
             </Link>
             {isAdmin && (
               <Link
                 href="/admin"
-                className={`text-sm font-medium transition-colors ${
-                  pathname.startsWith("/admin") ? "text-primary" : "text-muted-foreground hover:text-primary"
-                }`}
+                className={`text-sm font-medium transition-colors ${pathname.startsWith("/admin") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
               >
                 Admin
               </Link>
@@ -91,16 +64,16 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || ""} />
-                    <AvatarFallback>{session?.user?.name?.charAt(0) || <User className="h-4 w-4" />}</AvatarFallback>
+                    <AvatarImage src={session.user?.image || ""} alt={session.user?.name || ""} />
+                    <AvatarFallback>{session.user?.name?.charAt(0) || <User className="h-4 w-4" />}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{session?.user?.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{session?.user?.email}</p>
+                    <p className="text-sm font-medium">{session.user?.name}</p>
+                    <p className="text-xs text-muted-foreground">{session.user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

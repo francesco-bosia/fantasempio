@@ -30,6 +30,10 @@ const MatchSchema = new mongoose.Schema({
     enum: ["player1", "player2", "draw", null],
     default: null,
   },
+  cleanSheets: {
+    player1: { type: Boolean, default: false },
+    player2: { type: Boolean, default: false },
+  },
   leaguePoints: {
     player1: {
       type: Number,

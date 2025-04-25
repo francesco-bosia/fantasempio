@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -45,11 +44,9 @@ interface User {
 }
 
 export default function AdminMatchesPage() {
-  const { data: session, status } = useSession()
   const [matches, setMatches] = useState<Match[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [startDate, setStartDate] = useState<Date>(new Date())
   const [season, setSeason] = useState("1")
   const [weekNumber, setWeekNumber] = useState("1")
@@ -58,27 +55,6 @@ export default function AdminMatchesPage() {
   const [isTesting, setIsTesting] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await fetch("/api/auth/check-admin")
-        const data = await response.json()
-
-        setIsAdmin(data.isAdmin)
-
-        if (!data.isAdmin) {
-          router.push("/")
-        }
-      } catch (error) {
-        console.error("Error checking admin status:", error)
-        router.push("/")
-      }
-    }
-
-    if (status === "authenticated") {
-      checkAdminStatus()
-    }
-  }, [status, router])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,10 +85,8 @@ export default function AdminMatchesPage() {
       }
     }
 
-    if (status === "authenticated" && isAdmin) {
-      fetchData()
-    }
-  }, [status, isAdmin])
+    fetchData()
+  }, [])
 
   const handleGenerateMatches = async () => {
     setIsGenerating(true)
@@ -186,7 +160,7 @@ export default function AdminMatchesPage() {
   const handleProcessWeek = async () => {
     setIsProcessing(true)
     try {
-      const response = await fetch("/api/matches/process-week", {
+      const response = await fetch("/api/matches/process", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -245,17 +219,8 @@ export default function AdminMatchesPage() {
     }
   }
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return <div className="text-center">Loading...</div>
-  }
-
-  if (status === "unauthenticated") {
-    router.push("/auth/signin")
-    return null
-  }
-
-  if (!isAdmin) {
-    return null // Will redirect in useEffect
   }
 
   const hasEnoughPlayers = users.length >= 2
@@ -280,7 +245,7 @@ export default function AdminMatchesPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {!hasEnoughPlayers && (
-                <Alert variant="warning" className="mb-4">
+                <Alert variant="default" className="mb-4">
                   <InfoIcon className="h-4 w-4" />
                   <AlertTitle>Not enough players</AlertTitle>
                   <AlertDescription>
@@ -291,7 +256,7 @@ export default function AdminMatchesPage() {
               )}
 
               {!hasEvenPlayers && users.length > 0 && (
-                <Alert variant="warning" className="mb-4">
+                <Alert variant="default" className="mb-4">
                   <InfoIcon className="h-4 w-4" />
                   <AlertTitle>Odd number of players</AlertTitle>
                   <AlertDescription>

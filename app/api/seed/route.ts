@@ -9,18 +9,19 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const key = url.searchParams.get("key")
 
-    // Ensure this endpoint can only be called with a secret key or by an admin
-    if (key !== process.env.SEED_KEY && !(await isAdmin(req))) {
+    // ✅ Protect with either secret key or admin rights
+    const authorized = key === process.env.SEED_KEY || (await isAdmin(req))
+    if (!authorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     await connectToDatabase()
 
-    // Clear existing substances
+    // ✅ Clear existing substances
     await Substance.deleteMany({})
 
-    // Create categories mapping
-    const categories = {
+    // ✅ Substance categories and descriptions
+    const categories: Record<string, string> = {
       Snus: "Tobacco",
       Sigaretta: "Tobacco",
       Cannabis: "Drugs",
@@ -37,12 +38,29 @@ export async function GET(req: Request) {
       "Clean sheet": "Other",
     }
 
-    // Insert substances with their points
+    const descriptions: Record<string, string> = {
+      Snus: "Una porzione di snus",
+      Sigaretta: "Una sigaretta",
+      Cannabis: "Una canna",
+      "Cerotto alla nicotina": "Un cerotto alla nicotina",
+      "Birra 3dl": "Una birra da 3dl",
+      "Birra 5dl": "Una birra da 5dl",
+      "Birra analcolica": "Una birra analcolica in qualsiasi formato",
+      "Bicchiere di vino": "Un bicchiere di vino",
+      Cocktail: "Un cocktail (Spritz, Negroni, Gin Tonic, ecc.)",
+      Shot: "Uno shot (Tequila, Jäger, Sambuca, ecc.)",
+      "Fast food": "Un pasto da fast food (McDonald's, Burger King, KFC...)",
+      LSD: "Un uso di LSD",
+      "Droghe pesanti": "Uso di droghe pesanti (Cocaina, ecc.)",
+      "Clean sheet": "Nessuna sostanza in una settimana",
+    }
+
+    // ✅ Build substances to insert
     const substances = Object.entries(substancePoints).map(([name, points]) => ({
       name,
       points,
-      category: categories[name as keyof typeof categories] || "Other",
-      description: getSubstanceDescription(name),
+      category: categories[name] || "Other",
+      description: descriptions[name] || "",
     }))
 
     await Substance.insertMany(substances)
@@ -55,25 +73,4 @@ export async function GET(req: Request) {
     console.error("Seed error:", error)
     return NextResponse.json({ message: "Error seeding database" }, { status: 500 })
   }
-}
-
-function getSubstanceDescription(name: string): string {
-  const descriptions: Record<string, string> = {
-    Snus: "Una porzione di snus",
-    Sigaretta: "Una sigaretta",
-    Cannabis: "Una canna",
-    "Cerotto alla nicotina": "Un cerotto alla nicotina",
-    "Birra 3dl": "Una birra da 3dl",
-    "Birra 5dl": "Una birra da 5dl",
-    "Birra analcolica": "Una birra analcolica in qualsiasi formato",
-    "Bicchiere di vino": "Un bicchiere di vino",
-    Cocktail: "Un cocktail (Spritz, Negroni, Gin Tonic, ecc.)",
-    Shot: "Uno shot (Tequila, Jäger, Sambuca, ecc.)",
-    "Fast food": "Un pasto da fast food (McDonald's, Burger King, KFC...)",
-    LSD: "Un uso di LSD",
-    "Droghe pesanti": "Uso di droghe pesanti (Cocaina, ecc.)",
-    "Clean sheet": "Nessuna sostanza in un giorno",
-  }
-
-  return descriptions[name] || ""
 }

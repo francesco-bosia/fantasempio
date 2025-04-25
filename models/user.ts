@@ -1,3 +1,4 @@
+import { PLAYERS } from "@/lib/players"
 import mongoose from "mongoose"
 
 const UserSchema = new mongoose.Schema({
@@ -22,7 +23,7 @@ const UserSchema = new mongoose.Schema({
   },
   playerName: {
     type: String,
-    enum: ["Simo", "Sam", "Noe", "Marco", "Omar", "John", "Zeno", "Ogno"],
+    enum: Array.from(PLAYERS),
     required: [true, "Please select a player name"],
   },
   role: {

@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
     await connectToDatabase()
 
-    const query: any = {}
+    const query: Partial<Record<keyof typeof Match.schema.obj, any>> = {} = {}
 
     if (active === "true") {
       query.isActive = true
@@ -67,11 +67,6 @@ export async function POST(req: Request) {
     // Check if we have enough players
     if (playerNames.length < 2) {
       return NextResponse.json({ message: "Not enough players registered" }, { status: 400 })
-    }
-
-    // Check if we have an even number of players
-    if (playerNames.length % 2 !== 0) {
-      return NextResponse.json({ message: "Number of players must be even" }, { status: 400 })
     }
 
     // Generate match schedule with players from the database
