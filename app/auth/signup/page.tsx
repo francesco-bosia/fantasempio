@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PLAYERS } from "@/lib/players"
 
 export default function SignUp() {
   const [email, setEmail] = useState("")
@@ -22,17 +21,16 @@ export default function SignUp() {
   useEffect(() => {
     async function fetchAvailablePlayers() {
       try {
-        const response = await fetch("/api/users")
+        const response = await fetch("/api/users/get-available-names")
         const data = await response.json()
+        console.log(data)
+
 
         if (!response.ok) {
           throw new Error(data.message || "Could not fetch users")
         }
-
-        const takenPlayerNames = data.users.map((user: { playerName: string }) => user.playerName)
-        const available = PLAYERS.filter((player) => !takenPlayerNames.includes(player))
         
-        setAvailablePlayers(available)
+        setAvailablePlayers(data.available)
       } catch (error) {
         toast.error("Failed to fetch available players: " + (error instanceof Error ? error.message : "Unknown error"))
       }

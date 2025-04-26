@@ -4,11 +4,12 @@ import { connectToDatabase } from "@/lib/mongodb"
 import SubstanceLog from "@/models/substance-log"
 import User from "@/models/user"
 import Substance from "@/models/substance"
+import { handler } from "../auth/[...nextauth]/route"
+import { Session } from "next-auth"
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(auth)
-    
+    const session = await getServerSession(handler) as Session
     if (!session?.user?.email) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
