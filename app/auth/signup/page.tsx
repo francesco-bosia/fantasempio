@@ -34,7 +34,7 @@ export default function SignUp() {
         
         setAvailablePlayers(available)
       } catch (error) {
-        toast.error("Failed to fetch available players")
+        toast.error("Failed to fetch available players: " + (error instanceof Error ? error.message : "Unknown error"))
       }
     }
 

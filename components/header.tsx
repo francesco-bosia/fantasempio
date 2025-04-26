@@ -1,3 +1,4 @@
+// components/Header.tsx
 "use client"
 
 import { usePathname } from "next/navigation"
@@ -13,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, Settings } from "lucide-react"
+import { LogOut, User, Settings, Calendar } from "lucide-react"
 
 export default function Header() {
   const { data: session, status } = useSession()
@@ -27,7 +28,7 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-xl font-bold">
-            FantaSempio
+            FantaSalute
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link
@@ -35,6 +36,15 @@ export default function Header() {
               className={`text-sm font-medium transition-colors ${isActive("/input") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
             >
               Log Substance
+            </Link>
+            <Link
+              href="/schedule"
+              className={`text-sm font-medium transition-colors ${isActive("/schedule") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+            >
+              <span className="flex items-center">
+                <Calendar className="mr-1 h-4 w-4" />
+                Schedule
+              </span>
             </Link>
             <Link
               href="/standings"
@@ -77,6 +87,12 @@ export default function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/schedule">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    <span>Match Schedule</span>
+                  </Link>
+                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin">

@@ -5,6 +5,15 @@ import User from "@/models/user"
 import { generateMatchSchedule } from "@/lib/match-scheduler"
 import { validateMatchSchedule } from "@/lib/match-validator"
 import { isAdmin } from "@/lib/auth-utils"
+import { PLAYERS } from "@/lib/players"
+
+// Define a more specific type for query fields
+type MatchQueryFields = {
+  isActive?: boolean;
+  $or?: Array<{ player1: string } | { player2: string }>;
+  weekNumber?: number;
+  season?: number;
+}
 
 // GET: Fetch matches (public)
 export async function GET(req: Request) {
@@ -17,7 +26,8 @@ export async function GET(req: Request) {
 
     await connectToDatabase()
 
-    const query: Partial<Record<keyof typeof Match.schema.obj, any>> = {} = {}
+    // Create the query object with the proper type
+    const query: MatchQueryFields = {}
 
     if (active === "true") {
       query.isActive = true
@@ -64,13 +74,19 @@ export async function POST(req: Request) {
     const users = await User.find({}, "playerName")
     const playerNames = users.map((user) => user.playerName)
 
+    console.log("Registered players:", playerNames)
+    console.log("Actual players:", PLAYERS)
+
+    const players2 = PLAYERS
     // Check if we have enough players
     if (playerNames.length < 2) {
       return NextResponse.json({ message: "Not enough players registered" }, { status: 400 })
     }
 
     // Generate match schedule with players from the database
-    const schedule = generateMatchSchedule(new Date(startDate), playerNames, season)
+    const schedule = generateMatchSchedule(new Date(startDate), players2, season)
+    console.log("Schedule:", schedule)
+
 
     // Validate the schedule
     const isValid = validateMatchSchedule(schedule, playerNames)
@@ -97,6 +113,8 @@ export async function POST(req: Request) {
     )
 
     const createdMatches = await Match.insertMany(matchesToCreate)
+
+    console.log("Matches created:", matchesToCreate)
 
     return NextResponse.json(
       {

@@ -4,12 +4,12 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
@@ -26,10 +26,10 @@ interface Substance {
 export default function InputPage() {
   const { data: session, status } = useSession()
   const [substanceId, setSubstanceId] = useState<string>("")
+  const [quantity, setQuantity] = useState<number>(1)
   const [date, setDate] = useState<Date>(new Date())
   const [isLoading, setIsLoading] = useState(false)
   const [substances, setSubstances] = useState<Substance[]>([])
-  const router = useRouter()
 
   useEffect(() => {
     const fetchSubstances = async () => {
@@ -41,7 +41,7 @@ export default function InputPage() {
           throw new Error(data.message || "Failed to fetch substances")
         }
 
-        setSubstances(data.substances)
+        setSubstances(data.substances.filter((substance: Substance) => substance.name !== "Clean sheet"))
       } catch (error) {
         toast.error("Error", {
           description: error instanceof Error ? error.message : "Failed to fetch substances"
@@ -67,6 +67,7 @@ export default function InputPage() {
         body: JSON.stringify({
           substanceId,
           date: date.toISOString(),
+          quantity: quantity
         }),
       })
 
@@ -82,7 +83,7 @@ export default function InputPage() {
 
       // Reset form
       setSubstanceId("")
-      setDate(new Date())
+      setQuantity(1)
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to create substance log",
@@ -94,11 +95,6 @@ export default function InputPage() {
 
   if (status === "loading") {
     return <div className="text-center">Loading...</div>
-  }
-
-  if (status === "unauthenticated") {
-    router.push("/auth/signin")
-    return null
   }
 
   return (
@@ -128,6 +124,17 @@ export default function InputPage() {
             </div>
 
             <div className="space-y-2">
+              <label className="text-sm font-medium">Quantity</label>
+              <Input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm font-medium">Date</label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -140,7 +147,12 @@ export default function InputPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} initialFocus />
+                  <Calendar 
+                    mode="single" 
+                    selected={date} 
+                    onSelect={(date) => date && setDate(date)} 
+                    initialFocus 
+                  />
                 </PopoverContent>
               </Popover>
             </div>

@@ -1,3 +1,4 @@
+// app/page.tsx
 import { getServerSession } from "next-auth/next"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import CurrentWeekMatches from "@/components/matches/CurrentWeekMatches"
 
 function DashboardCard({
   title,
@@ -39,34 +41,39 @@ export default async function Home() {
   const session = await getServerSession()
 
   return (
-    <div className="px-4 py-16 flex flex-col items-center justify-center space-y-12 text-center">
-      <div className="space-y-4">
-        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
-          Welcome to FantaSempio
+    <div className="px-4 py-12 flex flex-col items-center justify-center space-y-8">
+      <div className="space-y-4 text-center">
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
+          Welcome to FantaSalute!
         </h1>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           A gamification platform to help reduce substance use
         </p>
       </div>
 
       {session ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 w-full max-w-6xl">
-          <DashboardCard
-            title="Log Substance Use"
-            description="Record your daily substance consumption"
-            href="/input"
-          />
-          <DashboardCard
-            title="View Standings"
-            description="Check the current league standings"
-            href="/standings"
-          />
-          <DashboardCard
-            title="View Statistics"
-            description="Analyze your substance use over time"
-            href="/statistics"
-          />
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 w-full max-w-4xl">
+            <DashboardCard
+              title="Log Substance Use"
+              description="Record your daily substance consumption"
+              href="/input"
+            />
+            <DashboardCard
+              title="View Schedule"
+              description="Check your upcoming matches"
+              href="/schedule"
+            />
+            <DashboardCard
+              title="View Standings"
+              description="Check the current league standings"
+              href="/standings"
+            />
+          </div>
+          
+          {/* Current Matches Section */}
+          <CurrentWeekMatches />
+        </>
       ) : (
         <div className="flex flex-col items-center space-y-4">
           <p className="text-lg">Sign in to get started</p>

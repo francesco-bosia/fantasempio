@@ -7,50 +7,58 @@ import Substance from "@/models/substance"
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession()
-
-    if (!session || !session.user) {
+    const session = await getServerSession(auth)
+    
+    if (!session?.user?.email) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
-
-    const { substanceId, date } = await req.json()
-
+    
+    const { substanceId, date, quantity = 1 } = await req.json()
+    
     if (!substanceId || !date) {
-      return NextResponse.json({ message: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ message: "Substance ID and date are required" }, { status: 400 })
     }
-
+    
     await connectToDatabase()
-
-    // Get user ID
+    
     const user = await User.findOne({ email: session.user.email })
+    
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 })
     }
-
-    // Get substance from database
+    
     const substance = await Substance.findById(substanceId)
+    
     if (!substance) {
       return NextResponse.json({ message: "Substance not found" }, { status: 404 })
     }
-
-    // Create substance log
-    const log = await SubstanceLog.create({
-      user: user._id,
-      substance: substance._id,
-      date: new Date(date),
-      points: substance.points,
-    })
-
-    return NextResponse.json(
-      {
-        message: "Substance log created successfully",
-        log,
-      },
-      { status: 201 },
-    )
+    
+    // Create an array to store the created logs
+    const createdLogs = []
+    
+    // Create multiple substance log entries based on the quantity
+    for (let i = 0; i < quantity; i++) {
+      const newLog = new SubstanceLog({
+        user: user._id,
+        substance: substanceId,
+        date: new Date(date),
+        points: substance.points,
+        // Keep quantity as 1 for each entry
+        quantity: 1
+      })
+      
+      await newLog.save()
+      createdLogs.push(newLog)
+    }
+    
+    return NextResponse.json({
+      message: `${quantity} substance log(s) created successfully`,
+      logs: createdLogs
+    }, { status: 201 })
+    
   } catch (error) {
-    console.error("Substance log error:", error)
-    return NextResponse.json({ message: "Error creating substance log" }, { status: 500 })
+    console.error("Error creating substance log:", error)
+    return NextResponse.json({ message: "Failed to create substance log" }, { status: 500 })
   }
 }
 
