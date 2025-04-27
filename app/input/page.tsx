@@ -24,7 +24,7 @@ interface Substance {
 }
 
 export default function InputPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const [substanceId, setSubstanceId] = useState<string>("")
   const [quantity, setQuantity] = useState<number>(1)
   const [date, setDate] = useState<Date>(new Date())

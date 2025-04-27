@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { connectToDatabase } from "@/lib/mongodb"
 import Substance from "@/models/substance"
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession()
 

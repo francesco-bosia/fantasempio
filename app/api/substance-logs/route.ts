@@ -4,12 +4,11 @@ import { connectToDatabase } from "@/lib/mongodb"
 import SubstanceLog from "@/models/substance-log"
 import User from "@/models/user"
 import Substance from "@/models/substance"
-import { handler } from "../auth/[...nextauth]/route"
-import { Session } from "next-auth"
+import mongoose from "mongoose"
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(handler) as Session
+    const session = await getServerSession()
     if (!session?.user?.email) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
@@ -78,7 +77,16 @@ export async function GET(req: Request) {
 
     await connectToDatabase()
 
-    const query: any = {}
+    // Define a specific type for the query object
+    interface SubstanceLogQuery {
+      user?: string | mongoose.Types.ObjectId;
+      date?: {
+        $gte: Date;
+        $lte: Date;
+      };
+    }
+
+    const query: SubstanceLogQuery = {}
 
     if (userId) {
       query.user = userId

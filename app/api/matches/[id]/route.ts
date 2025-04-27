@@ -5,11 +5,11 @@ import { isAdmin } from "@/lib/auth-utils"
 
 // GET: Fetch a specific match by ID
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+    req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     
     if (!id) {
       return NextResponse.json({ message: "Match ID is required" }, { status: 400 })
@@ -33,7 +33,7 @@ export async function GET(
 // PATCH: Update a specific match
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check if user is admin
@@ -88,7 +88,7 @@ export async function PATCH(
 // DELETE: Delete a specific match
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check if user is admin
@@ -96,7 +96,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized: Admin access required" }, { status: 403 })
     }
     
-    const { id } = params
+    const { id } = await params
     
     await connectToDatabase()
     

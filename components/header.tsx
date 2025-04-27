@@ -52,12 +52,6 @@ export default function Header() {
             >
               Standings
             </Link>
-            <Link
-              href="/statistics"
-              className={`text-sm font-medium transition-colors ${isActive("/statistics") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
-            >
-              Statistics
-            </Link>
             {isAdmin && (
               <Link
                 href="/admin"

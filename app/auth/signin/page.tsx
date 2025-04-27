@@ -37,7 +37,7 @@ export default function SignIn() {
         router.refresh()
       }
     } catch (error) {
-      toast.error("Something went wrong")
+      toast.error("Something went wrong: " + (error instanceof Error ? error.message : "Unknown error"))
     } finally {
       setIsLoading(false)
     }

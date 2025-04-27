@@ -2,7 +2,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
 import WeeklyMatchesGrid from "@/components/matches/WeeklyMatchesGrid"
 import MatchScheduleCard from "@/components/matches/MatchScheduleCard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -12,10 +11,8 @@ import { Loader2 } from "lucide-react"
 import type { Match } from "@/app/types/match"
 
 export default function SchedulePageContent() {
-  const { data: session } = useSession()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
-  const [myMatches, setMyMatches] = useState<Match[]>([])
   
   const fetchMatches = async () => {
     setLoading(true)
@@ -24,13 +21,6 @@ export default function SchedulePageContent() {
       const data = await res.json()
       setMatches(data.matches)
       
-      // Filter matches for the current player if logged in
-      if (session?.user?.playerName) {
-        const playerName = session.user.playerName
-        setMyMatches(data.matches.filter((m: Match) => 
-          m.player1 === playerName || m.player2 === playerName
-        ))
-      }
     } catch (error) {
       toast.error("Failed to fetch matches: " + (error instanceof Error ? error.message : "Unknown error"))
     } finally {
@@ -40,7 +30,7 @@ export default function SchedulePageContent() {
   
   useEffect(() => {
     fetchMatches()
-  }, [session])
+  }, [])
   
   if (loading) {
     return (

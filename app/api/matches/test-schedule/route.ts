@@ -36,7 +36,23 @@ export async function POST(req: Request) {
   }
 }
 
-function analyzeSchedule(schedule: any[], players: string[]) {
+// Define types to represent your schedule structure
+interface Match {
+  player1: string;
+  player2: string;
+  startDate: Date;
+  endDate: Date;
+}
+
+interface ScheduleWeek {
+  weekNumber: number;
+  startDate: Date;
+  endDate: Date;
+  matches: Match[];
+  season: number;
+}
+
+function analyzeSchedule(schedule: ScheduleWeek[], players: string[]) {
   // Count how many times each player plays against each other player
   const matchups: Record<string, Record<string, number>> = {}
 

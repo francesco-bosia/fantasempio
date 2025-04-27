@@ -3,7 +3,7 @@ import { PLAYERS } from "@/lib/players"
 import { connectToDatabase } from "@/lib/mongodb"
 import User from "@/models/user"
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     await connectToDatabase()
 

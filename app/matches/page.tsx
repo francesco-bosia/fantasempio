@@ -50,7 +50,7 @@ export default function PublicMatchesPage() {
     return groups
   }, {})
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto py-6">
         <Skeleton className="h-10 w-48 mb-4" />
