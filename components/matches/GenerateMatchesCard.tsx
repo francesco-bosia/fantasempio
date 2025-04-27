@@ -200,7 +200,7 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground mt-4">
-                  Note: This will create {Math.floor(PLAYERS.length / 2)} matches per week for {PLAYERS.length - 1} weeks
+                  Note: This will create {PLAYERS.length} matches per week for {PLAYERS.length - 1} weeks
                 </p>
               </div>
             </AccordionContent>

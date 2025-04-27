@@ -78,10 +78,7 @@ export async function POST(req: Request) {
     console.log("Actual players:", PLAYERS)
 
     const players2 = PLAYERS
-    // Check if we have enough players
-    if (playerNames.length < 2) {
-      return NextResponse.json({ message: "Not enough players registered" }, { status: 400 })
-    }
+
 
     // Generate match schedule with players from the database
     const schedule = generateMatchSchedule(new Date(startDate), players2, season)
