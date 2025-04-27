@@ -13,11 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { PLAYERS } from "@/lib/players"
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger 
+  TooltipTrigger
 } from "@/components/ui/tooltip"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
@@ -38,7 +38,7 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
         if (response.ok) {
           const data = await response.json()
           setExistingSeasons(data.seasons || [])
-          
+
           // Set default season to the next available one
           if (data.seasons?.length) {
             const nextSeason = Math.max(...data.seasons) + 1
@@ -51,7 +51,7 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
         setIsLoading(false)
       }
     }
-    
+
     fetchExistingSeasons()
   }, [])
 
@@ -72,7 +72,7 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
         const errorData = await response.json()
         throw new Error(errorData.message || "Generation failed")
       }
-      
+
       toast.success("Matches generated successfully!")
       onGenerate()
     } catch (error) {
@@ -104,7 +104,7 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
         </CardTitle>
         <CardDescription>Create a schedule of matches for all {PLAYERS.length} players</CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -127,8 +127,8 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
               </SelectTrigger>
               <SelectContent>
                 {[1, 2, 3, 4, 5].map(num => (
-                  <SelectItem 
-                    key={num} 
+                  <SelectItem
+                    key={num}
                     value={num.toString()}
                     disabled={existingSeasons.includes(num)}
                   >
@@ -143,34 +143,79 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
             <Label htmlFor="startDate">Season Start Date</Label>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
                   disabled={isGenerating}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                  {startDate ? format(startDate, "PPP p") : <span>Pick a date and time</span>}
                   <span className="sr-only">Open calendar</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar 
-                  mode="single" 
-                  selected={startDate} 
-                  onSelect={(date) => {
-                    if (date) {
-                      setStartDate(date);
-                      setCalendarOpen(false);
-                    }
-                  }}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
-                />
+              <PopoverContent className="w-auto p-4" align="start">
+                <div className="flex flex-col gap-4">
+                  {/* Calendar */}
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => {
+                      if (date) {
+                        const currentHours = startDate.getHours()
+                        const currentMinutes = startDate.getMinutes()
+                        const newDate = new Date(date)
+                        newDate.setHours(currentHours)
+                        newDate.setMinutes(currentMinutes)
+                        newDate.setSeconds(0, 0)
+                        setStartDate(newDate)
+                      }
+                    }}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                  />
+
+                  {/* Time Picker */}
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={startDate.getHours()}
+                      onChange={(e) => {
+                        const newDate = new Date(startDate)
+                        newDate.setHours(Number(e.target.value))
+                        setStartDate(newDate)
+                      }}
+                      className="border rounded-md p-1"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <option key={i} value={i}>
+                          {i.toString().padStart(2, "0")}h
+                        </option>
+                      ))}
+                    </select>
+
+                    <span>:</span>
+
+                    <select
+                      value={startDate.getMinutes()}
+                      onChange={(e) => {
+                        const newDate = new Date(startDate)
+                        newDate.setMinutes(Number(e.target.value))
+                        setStartDate(newDate)
+                      }}
+                      className="border rounded-md p-1"
+                    >
+                      {Array.from({ length: 60 }, (_, i) => (
+                        <option key={i} value={i}>
+                          {i.toString().padStart(2, "0")}m
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </PopoverContent>
             </Popover>
           </div>
         </div>
-        
+
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="schedule-preview">
             <AccordionTrigger className="text-sm font-medium">
@@ -182,7 +227,7 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <h4 className="text-sm font-medium">Players ({PLAYERS.length})</h4>
                 </div>
-                
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4">
                   {PLAYERS.map(player => (
                     <div key={player} className="bg-background p-2 rounded border text-sm text-center">
@@ -190,7 +235,7 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
                     </div>
                   ))}
                 </div>
-                
+
                 <h4 className="text-sm font-medium mb-2">Weekly Schedule Preview</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {previewDates.map(week => (
@@ -207,10 +252,10 @@ export default function GenerateMatchesCard({ onGenerate }: { onGenerate: () => 
           </AccordionItem>
         </Accordion>
       </CardContent>
-      
+
       <CardFooter className="bg-muted/20 pt-4">
-        <Button 
-          onClick={handleGenerateMatches} 
+        <Button
+          onClick={handleGenerateMatches}
           disabled={isGenerating || isLoading}
           className="w-full"
         >

@@ -1,4 +1,4 @@
-import { addWeeks, addDays, startOfWeek, endOfDay } from "date-fns"
+import { addDays } from "date-fns"
 
 export interface Match {
   player1: string
@@ -19,7 +19,7 @@ export function generateMatchSchedule(startDate: Date, players: readonly string[
   const teams = [...players]
 
   if (teams.length % 2 !== 0) {
-    teams.push("BYE") // Add dummy team for odd number of players
+    teams.push("BYE")
   }
 
   const schedule: MatchSchedule[] = []
@@ -33,8 +33,9 @@ export function generateMatchSchedule(startDate: Date, players: readonly string[
   let rotated = [...teams]
 
   for (let week = 0; week < numDays; week++) {
-    const weekStartDate = addWeeks(startOfWeek(startDate, { weekStartsOn: 1 }), week)
-    const weekEndDate = endOfDay(addDays(weekStartDate, 6))
+    // 🛠 Calculate new start and end for each week based on original startDate
+    const weekStartDate = addDays(startDate, week * 7)
+    const weekEndDate = addDays(weekStartDate, 7) // 7 days later
 
     const matches: Match[] = []
 
@@ -66,8 +67,8 @@ export function generateMatchSchedule(startDate: Date, players: readonly string[
   // Second half: reverse home/away
   for (let i = 0; i < numDays; i++) {
     const baseWeek = schedule[i]
-    const returnWeekStartDate = addWeeks(baseWeek.startDate, numDays)
-    const returnWeekEndDate = addWeeks(baseWeek.endDate, numDays)
+    const returnWeekStartDate = addDays(baseWeek.startDate, numDays * 7)
+    const returnWeekEndDate = addDays(returnWeekStartDate, 7)
 
     const returnMatches = baseWeek.matches.map((m) => ({
       player1: m.player2,

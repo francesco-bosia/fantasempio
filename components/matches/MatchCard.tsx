@@ -6,9 +6,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, TrophyIcon, ShieldCheck } from "lucide-react"
+import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { type PlayerName } from "@/lib/players"
 
 interface Match {
@@ -45,7 +44,6 @@ export default function MatchCard({
   match,
   onUpdateScore,
   editable = false,
-  showLeaguePoints = true
 }: MatchCardProps) {
   const [player1Score, setPlayer1Score] = useState<string>(
     match.player1Points !== null ? match.player1Points.toString() : ""
@@ -56,26 +54,22 @@ export default function MatchCard({
   const [isUpdating, setIsUpdating] = useState(false)
 
   // Compute status and results info
+  function getMatchStatus(match: Match): "upcoming" | "ongoing" | "completed" | "processing" {
+    const now = new Date()
+    const start = new Date(match.startDate)
+    const end = new Date(match.endDate)
+
+    if (match.isProcessed) return "completed"
+    if (now < start) return "upcoming"
+    if (now >= start && now <= end) return "ongoing"
+    return "processing"
+  }
   const isCompleted = match.isProcessed
-  const isUpcoming = !isCompleted && new Date(match.startDate) > new Date()
-  const isActive = !isCompleted && match.isActive
 
   // Winner determination based on schema logic
   const player1IsWinner = isCompleted && match.winner === "player1"
   const player2IsWinner = isCompleted && match.winner === "player2"
-  const isDraw = isCompleted && match.winner === "draw"
 
-  // Status badge
-  let statusBadge
-  if (isCompleted) {
-    statusBadge = <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Completed</Badge>
-  } else if (isUpcoming) {
-    statusBadge = <Badge variant="outline">Upcoming</Badge>
-  } else if (isActive) {
-    statusBadge = <Badge variant="secondary">Active</Badge>
-  } else {
-    statusBadge = <Badge variant="outline" className="text-muted-foreground">Inactive</Badge>
-  }
 
   const handleUpdateScore = async () => {
     if (!onUpdateScore) return
@@ -101,7 +95,36 @@ export default function MatchCard({
             Week {match.weekNumber}, Season {match.season}
           </span>
         </div>
-        {statusBadge}
+        {(() => {
+          const status = getMatchStatus(match)
+          console.log("Match status:", status)
+          if (status === "completed") {
+            return (
+              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                Completed
+              </Badge>
+            )
+          }
+          if (status === "ongoing") {
+            return (
+              <Badge className="animate-pulse bg-green-500 text-white dark:bg-green-400 dark:text-black">
+                Ongoing
+              </Badge>
+            )
+          }
+          if (status === "upcoming") {
+            return (
+              <Badge variant="secondary">
+                Upcoming
+              </Badge>
+            )
+          }
+          return (
+            <Badge className="animate-pulse bg-yellow-500 text-white dark:bg-yellow-400 dark:text-black">
+              Processing
+            </Badge>
+          )
+        })()}
       </CardHeader>
 
       <CardContent className="pt-6">
