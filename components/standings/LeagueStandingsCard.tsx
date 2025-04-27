@@ -108,10 +108,10 @@ export default function LeagueStandingsCard({
       
       // Update goals
       if (match.player1Points !== null && match.player2Points !== null) {
-        player1.goalsFor += match.player1Points;
-        player1.goalsAgainst += match.player2Points;
-        player2.goalsFor += match.player2Points;
-        player2.goalsAgainst += match.player1Points;
+        player1.goalsFor += match.player2Points;
+        player1.goalsAgainst += match.player1Points;
+        player2.goalsFor += match.player1Points;
+        player2.goalsAgainst += match.player2Points;
       }
       
       // Update clean sheets

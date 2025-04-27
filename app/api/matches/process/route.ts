@@ -9,8 +9,14 @@ import { endOfDay, isBefore } from "date-fns"
 
 export async function POST(req: Request) {
   try {
-    if (!(await isAdmin(req))) {
-      return NextResponse.json({ message: "Unauthorized: Admin access required" }, { status: 403 })
+    const cronSecret = process.env.CRON_SECRET
+    const authHeader = req.headers.get("authorization")
+
+    const isCron = authHeader === `Bearer ${cronSecret}`
+    const isUserAdmin = await isAdmin(req)
+
+    if (!isCron && !isUserAdmin) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 })
     }
 
     await connectToDatabase()

@@ -1,4 +1,3 @@
-// app/page.tsx
 import { getServerSession } from "next-auth/next"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,7 +8,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import CurrentWeekMatches from "@/components/matches/CurrentWeekMatches"
+import WeeklyMatchesGrid from "@/components/matches/WeeklyMatchesGrid"
+import type { Match } from "@/app/types/match"
+import { connectToDatabase } from "@/lib/mongodb"
+import MatchModel from "@/models/match"
+
+async function getCurrentMatches(): Promise<Match[]> {
+  await connectToDatabase()
+
+  const now = new Date()
+
+  const matches = await MatchModel.find({
+    startDate: { $lte: now },
+    endDate: { $gte: now },
+    isActive: true,
+  }).lean()
+
+  return matches.map((match) => ({
+    ...match,
+    _id: String(match._id),
+  })) as unknown as Match[]
+}
 
 function DashboardCard({
   title,
@@ -39,6 +58,11 @@ function DashboardCard({
 
 export default async function Home() {
   const session = await getServerSession()
+
+  let currentMatches: Match[] = []
+  if (session) {
+    currentMatches = await getCurrentMatches()
+  }
 
   return (
     <div className="px-4 py-12 flex flex-col items-center justify-center space-y-8">
@@ -70,9 +94,14 @@ export default async function Home() {
               href="/standings"
             />
           </div>
-          
-          {/* Current Matches Section */}
-          <CurrentWeekMatches />
+
+          {/* Matches Grid */}
+          <div className="w-full max-w-4xl mx-auto mt-8">
+            <WeeklyMatchesGrid
+              matches={currentMatches}
+              title="Current Week Matches"
+            />
+          </div>
         </>
       ) : (
         <div className="flex flex-col items-center space-y-4">

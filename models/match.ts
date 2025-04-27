@@ -65,18 +65,19 @@ const MatchSchema = new mongoose.Schema({
 
 // Add a method to calculate the winner based on substance points
 MatchSchema.methods.calculateResult = function () {
-  if (this.player1Points < this.player2Points) {
-    this.winner = "player1"
-    this.leaguePoints.player1 = 3
-    this.leaguePoints.player2 = 0
-  } else if (this.player1Points > this.player2Points) {
-    this.winner = "player2"
-    this.leaguePoints.player1 = 0
-    this.leaguePoints.player2 = 3
-  } else {
+  if (Math.abs(this.player1Points - this.player2Points) <= 3) {
     this.winner = "draw"
     this.leaguePoints.player1 = 1
     this.leaguePoints.player2 = 1
+  }
+  else if (this.player1Points < this.player2Points) {
+    this.winner = "player1"
+    this.leaguePoints.player1 = 3
+    this.leaguePoints.player2 = 0
+  } else {
+    this.winner = "player2"
+    this.leaguePoints.player1 = 0
+    this.leaguePoints.player2 = 3
   }
   this.isProcessed = true
   return this

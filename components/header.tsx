@@ -1,4 +1,3 @@
-// components/Header.tsx
 "use client"
 
 import { usePathname } from "next/navigation"
@@ -14,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, Settings, Calendar } from "lucide-react"
+import { LogOut, User, Settings, Calendar, Menu } from "lucide-react"
 
 export default function Header() {
   const { data: session, status } = useSession()
@@ -26,42 +25,32 @@ export default function Header() {
   return (
     <header className="border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           <Link href="/" className="text-xl font-bold">
             FantaSalute
           </Link>
+
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/input"
-              className={`text-sm font-medium transition-colors ${isActive("/input") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
-            >
-              Log Substance
-            </Link>
-            <Link
-              href="/schedule"
-              className={`text-sm font-medium transition-colors ${isActive("/schedule") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
-            >
-              <span className="flex items-center">
-                <Calendar className="mr-1 h-4 w-4" />
-                Schedule
-              </span>
-            </Link>
-            <Link
-              href="/standings"
-              className={`text-sm font-medium transition-colors ${isActive("/standings") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
-            >
-              Standings
-            </Link>
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className={`text-sm font-medium transition-colors ${pathname.startsWith("/admin") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
-              >
-                Admin
-              </Link>
-            )}
+            <NavLinks isActive={isActive} isAdmin={isAdmin} />
           </nav>
+
+          {/* Mobile Menu */}
+          <div className="md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <NavLinks isActive={isActive} isAdmin={isAdmin} dropdown />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
+
+        {/* Right Side: Avatar or Sign In */}
         <div className="flex items-center gap-4">
           {status === "authenticated" ? (
             <DropdownMenu>
@@ -107,5 +96,37 @@ export default function Header() {
         </div>
       </div>
     </header>
+  )
+}
+
+function NavLinks({ isActive, isAdmin, dropdown = false }: { isActive: (path: string) => boolean, isAdmin: boolean, dropdown?: boolean }) {
+  const links = [
+    { href: "/input", label: "Log Substance" },
+    { href: "/schedule", label: "Schedule" },
+    { href: "/standings", label: "Standings" },
+  ]
+
+  if (isAdmin) {
+    links.push({ href: "/admin", label: "Admin" })
+  }
+
+  return (
+    <>
+      {links.map((link) => dropdown ? (
+        <DropdownMenuItem key={link.href} asChild>
+          <Link href={link.href}>
+            {link.label}
+          </Link>
+        </DropdownMenuItem>
+      ) : (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={`text-sm font-medium transition-colors ${isActive(link.href) ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+        >
+          {link.label}
+        </Link>
+      ))}
+    </>
   )
 }

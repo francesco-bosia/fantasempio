@@ -17,23 +17,34 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
   const [seasonFilter, setSeasonFilter] = useState<string>("all")
   const [playerFilter, setPlayerFilter] = useState<string>("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-  
+
+  function getMatchStatus(match: Match): "upcoming" | "ongoing" | "completed" | "processing" {
+    const now = new Date()
+    const start = new Date(match.startDate)
+    const end = new Date(match.endDate)
+
+    if (match.isProcessed) return "completed"
+    if (now < start) return "upcoming"
+    if (now >= start && now <= end) return "ongoing"
+    return "processing"
+  }
+
   // Get unique seasons for filter
   const seasons = Array.from(new Set(matches.map(m => m.season))).sort((a, b) => a - b)
-  
+
   // Apply filters
   const filteredMatches = matches.filter(match => {
     // Season filter
     if (seasonFilter !== "all" && match.season !== parseInt(seasonFilter)) {
       return false
     }
-    
+
     // Player filter
-    if (playerFilter && !match.player1.toLowerCase().includes(playerFilter.toLowerCase()) && 
-        !match.player2.toLowerCase().includes(playerFilter.toLowerCase())) {
+    if (playerFilter && !match.player1.toLowerCase().includes(playerFilter.toLowerCase()) &&
+      !match.player2.toLowerCase().includes(playerFilter.toLowerCase())) {
       return false
     }
-    
+
     // Status filter
     if (statusFilter === "completed" && !match.isProcessed) {
       return false
@@ -41,10 +52,10 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
     if (statusFilter === "active" && (match.isProcessed || !match.isActive)) {
       return false
     }
-    
+
     return true
   })
-  
+
   if (loading) {
     return (
       <Card>
@@ -76,7 +87,7 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
         </CardTitle>
         <CardDescription>All matches grouped by season and week</CardDescription>
       </CardHeader>
-      
+
       <div className="px-6 pb-2 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <Select value={seasonFilter} onValueChange={setSeasonFilter}>
@@ -93,15 +104,15 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
-          <Input 
+          <Input
             placeholder="Filter by player name"
             value={playerFilter}
             onChange={(e) => setPlayerFilter(e.target.value)}
           />
         </div>
-        
+
         <div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
@@ -115,20 +126,20 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
           </Select>
         </div>
       </div>
-      
+
       <CardContent>
         {Object.entries(matchesBySeason).length > 0 ? (
           Object.entries(matchesBySeason)
             .sort(([seasonA], [seasonB]) => parseInt(seasonA) - parseInt(seasonB))
             .map(([season, seasonMatches]) => {
               const matchesByWeek = groupBy(seasonMatches, 'weekNumber');
-              
+
               return (
                 <div key={season} className="mb-8">
                   <h3 className="text-lg font-semibold mb-4 flex items-center">
                     <Badge variant="outline" className="mr-2">Season {season}</Badge>
                   </h3>
-                  
+
                   {Object.entries(matchesByWeek)
                     .sort(([weekA], [weekB]) => parseInt(weekA) - parseInt(weekB))
                     .map(([week, weekMatches]) => (
@@ -148,7 +159,7 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
                             <TableBody>
                               {weekMatches.map(match => {
                                 const isProcessed = match.isProcessed;
-                                
+
                                 return (
                                   <TableRow key={match._id}>
                                     <TableCell className="font-mono text-xs">
@@ -159,15 +170,15 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
                                         <span className={match.winner === "player1" ? "font-bold" : ""}>
                                           {match.player1}
                                         </span>
-                                        
+
                                         {match.winner === "player1" && (
                                           <TrophyIcon className="h-4 w-4 text-amber-500" />
                                         )}
-                                        
+
                                         {isProcessed && match.cleanSheets.player1 && (
                                           <ShieldCheck className="h-4 w-4 text-blue-500" />
                                         )}
-                                        
+
                                         {isProcessed && (
                                           <span className="text-xs text-muted-foreground ml-1">
                                             ({match.leaguePoints.player1})
@@ -175,9 +186,9 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
                                         )}
                                       </div>
                                     </TableCell>
-                                    <TableCell className="text-center font-mono">
+                                    <TableCell className="text-center font-mono font-bold">
                                       {isProcessed ? (
-                                        `${match.player1Points}-${match.player2Points}`
+                                        `${match.player1Points} - ${match.player2Points}`
                                       ) : (
                                         "-"
                                       )}
@@ -187,15 +198,15 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
                                         <span className={match.winner === "player2" ? "font-bold" : ""}>
                                           {match.player2}
                                         </span>
-                                        
+
                                         {match.winner === "player2" && (
                                           <TrophyIcon className="h-4 w-4 text-amber-500" />
                                         )}
-                                        
+
                                         {isProcessed && match.cleanSheets.player2 && (
                                           <ShieldCheck className="h-4 w-4 text-blue-500" />
                                         )}
-                                        
+
                                         {isProcessed && (
                                           <span className="text-xs text-muted-foreground ml-1">
                                             ({match.leaguePoints.player2})
@@ -204,15 +215,36 @@ export default function MatchScheduleCard({ matches, loading }: { matches: Match
                                       </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                      {isProcessed ? (
-                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                                          Completed
-                                        </Badge>
-                                      ) : match.isActive ? (
-                                        <Badge variant="secondary">Active</Badge>
-                                      ) : (
-                                        <Badge variant="outline">Inactive</Badge>
-                                      )}
+                                      {(() => {
+                                        const status = getMatchStatus(match)
+
+                                        if (status === "completed") {
+                                          return (
+                                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                              Completed
+                                            </Badge>
+                                          )
+                                        }
+                                        if (status === "ongoing") {
+                                          return (
+                                            <Badge className="animate-pulse bg-green-500 text-white dark:bg-green-400 dark:text-black">
+                                              Ongoing
+                                            </Badge>
+                                          )
+                                        }
+                                        if (status === "upcoming") {
+                                          return (
+                                            <Badge variant="secondary">
+                                              Upcoming
+                                            </Badge>
+                                          )
+                                        }
+                                        return (
+                                          <Badge className="animate-pulse bg-yellow-500 text-white dark:bg-yellow-400 dark:text-black">
+                                            Processing
+                                          </Badge>
+                                        )
+                                      })()}
                                     </TableCell>
                                   </TableRow>
                                 )
