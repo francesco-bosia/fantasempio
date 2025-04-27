@@ -2,8 +2,7 @@
     "crons": [
       {
         "path": "/api/matches/process",
-        "schedule": "0 20 * * 0",
-        "method": "POST"
+        "schedule": "0 20 * * 0"
       }
     ]
   }
