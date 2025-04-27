@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TrophyIcon } from "lucide-react"
 import type { Match } from "@/app/types/match"
+import { PLAYERS } from "@/lib/players"
 
 interface LeagueStandingsCardProps {
   matches: Match[]
@@ -42,52 +43,34 @@ export default function LeagueStandingsCard({
     );
   }, [matches, season]);
 
-  // Calculate standings
   const standings = useMemo(() => {
     const playerMap = new Map<string, PlayerStanding>();
-    
-    // Initialize standings with all players who have played matches
-    seasonMatches.forEach(match => {
-      if (!playerMap.has(match.player1)) {
-        playerMap.set(match.player1, {
-          playerName: match.player1,
-          matchesPlayed: 0,
-          wins: 0,
-          draws: 0,
-          losses: 0,
-          points: 0,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          goalDifference: 0,
-          cleanSheets: 0
-        });
-      }
-      
-      if (!playerMap.has(match.player2)) {
-        playerMap.set(match.player2, {
-          playerName: match.player2,
-          matchesPlayed: 0,
-          wins: 0,
-          draws: 0,
-          losses: 0,
-          points: 0,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          goalDifference: 0,
-          cleanSheets: 0
-        });
-      }
+  
+    // Initialize EVERY player with 0 stats
+    PLAYERS.forEach(playerName => {
+      playerMap.set(playerName, {
+        playerName,
+        matchesPlayed: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        points: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+        cleanSheets: 0,
+      });
     });
-    
-    // Calculate stats for each match
+  
+    // Then update the players based on played matches
     seasonMatches.forEach(match => {
       const player1 = playerMap.get(match.player1)!;
       const player2 = playerMap.get(match.player2)!;
-      
+  
       // Update matches played
       player1.matchesPlayed++;
       player2.matchesPlayed++;
-      
+  
       // Update points and win/draw/loss records
       if (match.winner === "player1") {
         player1.wins++;
@@ -105,7 +88,7 @@ export default function LeagueStandingsCard({
         player1.points += match.leaguePoints.player1;
         player2.points += match.leaguePoints.player2;
       }
-      
+  
       // Update goals
       if (match.player1Points !== null && match.player2Points !== null) {
         player1.goalsFor += match.player2Points;
@@ -113,7 +96,7 @@ export default function LeagueStandingsCard({
         player2.goalsFor += match.player1Points;
         player2.goalsAgainst += match.player2Points;
       }
-      
+  
       // Update clean sheets
       if (match.cleanSheets.player1) {
         player1.cleanSheets++;
@@ -122,30 +105,23 @@ export default function LeagueStandingsCard({
         player2.cleanSheets++;
       }
     });
-    
+  
     // Calculate goal differences
     playerMap.forEach(player => {
       player.goalDifference = player.goalsFor - player.goalsAgainst;
     });
-    
+  
     // Convert to array and sort
     return Array.from(playerMap.values()).sort((a, b) => {
-      // Sort by points
       if (a.points !== b.points) {
         return b.points - a.points;
       }
-      
-      // If points are equal, sort by goal difference
       if (a.goalDifference !== b.goalDifference) {
         return b.goalDifference - a.goalDifference;
       }
-      
-      // If goal difference is equal, sort by goals scored
       if (a.goalsFor !== b.goalsFor) {
         return b.goalsFor - a.goalsFor;
       }
-      
-      // If all else is equal, sort alphabetically
       return a.playerName.localeCompare(b.playerName);
     });
   }, [seasonMatches]);
