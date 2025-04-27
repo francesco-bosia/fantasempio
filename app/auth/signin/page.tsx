@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { FcGoogle } from "react-icons/fc"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
@@ -41,10 +40,6 @@ export default function SignIn() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/" })
   }
 
   return (
