@@ -4,7 +4,7 @@ import Match from "@/models/match";
 import SubstanceLog from "@/models/substance-log";
 import SubstanceLogWeekView from "@/components/analytics/SubstanceLogWeekView";
 import { PlayerName, PLAYERS } from "@/lib/players";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 export default async function MyLogsPage() {
   const session = await getServerSession(authOptions);
