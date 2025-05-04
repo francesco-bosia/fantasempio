@@ -5,11 +5,9 @@ import SubstanceLog from "@/models/substance-log";
 import SubstanceLogWeekView from "@/components/analytics/SubstanceLogWeekView";
 import { PlayerName, PLAYERS } from "@/lib/players";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import Substance from "@/models/substance";
 
 export default async function MyLogsPage() {
   const session = await getServerSession(authOptions);
-console.log("Session in MyLogsPage:", session);
   if (!session) {
     return <p className="text-center mt-10">Please sign in to view your substance logs.</p>;
   }
@@ -55,13 +53,9 @@ for (const match of allMatches) {
     }
   }
   // ---- Fetch logs for all weeks ----
-  const substances = await Substance.find({}).lean();
-  console.log("Substances:", substances ? "Substances found" : "No substances found");
   const allLogs = await SubstanceLog.find({
     user: session.user?.id
   }).populate("substance").lean();
-
-  console.log("Logs in Page:", allLogs)
   // Prepare the logs mapped by week and season
   const logsBySeasonWeek: {
     [season: number]: {

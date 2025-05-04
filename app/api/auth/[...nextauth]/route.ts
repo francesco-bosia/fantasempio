@@ -47,19 +47,15 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
-        console.log("JWT token:", token)
       }
-      console.log("JWT token outside:", token)
       return token
     },
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id
         session.user.role = token.role
-        console.log("Session user:", session.user)
 
       }
-      console.log("Session user outside:", session.user)
       return session
     },
   },
