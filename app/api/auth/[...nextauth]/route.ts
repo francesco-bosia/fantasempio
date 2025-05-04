@@ -3,8 +3,9 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { connectToDatabase } from "@/lib/mongodb"
 import UserDB from "@/models/user"
 import bcrypt from "bcryptjs"
+import { NextAuthOptions } from "next-auth"
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -46,14 +47,19 @@ const handler = NextAuth({
       if (user) {
         token.id = user.id
         token.role = user.role
+        console.log("JWT token:", token)
       }
+      console.log("JWT token outside:", token)
       return token
     },
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id
         session.user.role = token.role
+        console.log("Session user:", session.user)
+
       }
+      console.log("Session user outside:", session.user)
       return session
     },
   },
@@ -64,6 +70,8 @@ const handler = NextAuth({
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
-})
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
