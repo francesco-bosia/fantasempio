@@ -116,11 +116,11 @@ export default function LeagueStandingsCard({
       if (a.points !== b.points) {
         return b.points - a.points;
       }
-      if (a.goalDifference !== b.goalDifference) {
-        return b.goalDifference - a.goalDifference;
+      if (a.cleanSheets !== b.cleanSheets) {
+        return b.cleanSheets - a.cleanSheets;
       }
       if (a.goalsFor !== b.goalsFor) {
-        return b.goalsFor - a.goalsFor;
+        return b.goalDifference - a.goalDifference;
       }
       return a.playerName.localeCompare(b.playerName);
     });
