@@ -5,6 +5,7 @@ import SubstanceLog from "@/models/substance-log";
 import SubstanceLogWeekView from "@/components/analytics/SubstanceLogWeekView";
 import { PlayerName, PLAYERS } from "@/lib/players";
 import { authOptions } from "@/lib/authOptions";
+import Substance from "@/models/substance";
 
 export default async function MyLogsPage() {
   const session = await getServerSession(authOptions);
@@ -53,6 +54,7 @@ for (const match of allMatches) {
     }
   }
   // ---- Fetch logs for all weeks ----
+  Substance.findOne({}).lean();
   const allLogs = await SubstanceLog.find({
     user: session.user?.id
   }).populate("substance").lean();
