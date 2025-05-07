@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
-import { format, parseISO } from "date-fns";
+import { eachDayOfInterval, format, parseISO } from "date-fns";
 
 interface Log {
   date: string;
@@ -26,6 +26,12 @@ interface SubstanceLogWeekViewProps {
   playerName: string;
   defaultSeason: number;
   defaultWeek: number;
+  matches: {
+    season: number;
+    weekNumber: number;
+    startDate: Date | string;
+    endDate: Date | string;
+  }[];
 }
 
 export default function SubstanceLogWeekView({
@@ -34,24 +40,38 @@ export default function SubstanceLogWeekView({
   weeksBySeason,
   playerName,
   defaultSeason,
-  defaultWeek
+  defaultWeek,
+  matches
 }: SubstanceLogWeekViewProps) {
 
   const [selectedSeason, setSelectedSeason] = useState(defaultSeason);
   const [selectedWeek, setSelectedWeek] = useState(defaultWeek);
 
+
+  const currentMatch = matches.find(
+    m => m.season === selectedSeason && m.weekNumber === selectedWeek
+  );
+  
+  const weekStart = currentMatch ? new Date(currentMatch.startDate) : new Date();
+  const weekEnd = currentMatch ? new Date(currentMatch.endDate) : new Date();
+  
   const logs = logsBySeasonWeek[selectedSeason]?.[selectedWeek]?.[playerName] || [];
 
   // Chart data: total points per day
   const pointsPerDay = logs.reduce((acc, log) => {
-    const day = format(parseISO(log.date), "EEE");
+    const day = format(parseISO(log.date), "dd/MMM");
     acc[day] = (acc[day] || 0) + log.points;
     return acc;
   }, {} as { [day: string]: number });
 
-  const chartData = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => ({
-    day,
-    points: pointsPerDay[day] || 0
+  const allDays = eachDayOfInterval({
+    start: weekStart,
+    end: weekEnd
+  });
+  
+  const chartData = allDays.map((day) => ({
+    day: format(day, "dd/MMM"),
+    points: pointsPerDay[format(day, "dd/MMM")] || 0
   }));
 
   return (

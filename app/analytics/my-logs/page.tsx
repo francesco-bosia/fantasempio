@@ -7,6 +7,13 @@ import { PlayerName, PLAYERS } from "@/lib/players";
 import { authOptions } from "@/lib/authOptions";
 import Substance from "@/models/substance";
 
+interface Match {
+  season: number;
+  weekNumber: number;
+  startDate: Date | string;
+  endDate: Date | string;
+}
+
 export default async function MyLogsPage() {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -25,6 +32,11 @@ export default async function MyLogsPage() {
     $or: [{ player1: playerName }, { player2: playerName }]
   }).sort({ season: 1, weekNumber: 1 }).lean();
 
+  console.log("All matches:", allMatches);
+  allMatches.forEach((match) => {
+    match._id = String(match._id)
+  }
+  )
   if (!allMatches.length) {
     return <p className="text-center mt-10">No matches found. Cannot determine available weeks.</p>;
   }
@@ -43,7 +55,7 @@ export default async function MyLogsPage() {
   let currentSeason = seasons[seasons.length - 1];
   let currentWeek = Math.max(...weeksBySeason[currentSeason]);
   // Find the first match where today falls between start and end date
-for (const match of allMatches) {
+  for (const match of allMatches) {
     const start = new Date(match.startDate);
     const end = new Date(match.endDate);
     const today = new Date();
@@ -93,13 +105,14 @@ for (const match of allMatches) {
     <div className="max-w-4xl mx-auto py-10 space-y-6">
       <h1 className="text-3xl font-bold">Your Substance Logs</h1>
 
-      <SubstanceLogWeekView 
-        logsBySeasonWeek={logsBySeasonWeek} 
-        seasons={seasons} 
-        weeksBySeason={weeksBySeason} 
+      <SubstanceLogWeekView
+        logsBySeasonWeek={logsBySeasonWeek}
+        seasons={seasons}
+        weeksBySeason={weeksBySeason}
         playerName={playerName}
         defaultSeason={currentSeason}
         defaultWeek={currentWeek}
+        matches={allMatches as unknown as Match[]}
       />
     </div>
   );
