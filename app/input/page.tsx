@@ -85,7 +85,7 @@ export default function InputPage() {
 
       // Reset form
       setSubstanceId("")
-      setQuantity(1)
+      setQuantity("1")
     } catch (error) {
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to create substance log",
