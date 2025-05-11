@@ -19,6 +19,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 type Match = {
   season: number;
   weekNumber: number;
+  startDate: Date | string;
+  endDate: Date | string;
 };
 
 type Log = {
@@ -68,7 +70,7 @@ export default function SubstanceLogWeekView() {
 
       // Set default user and week
       const today = new Date();
-      const currentMatch = matchesData.matches.find((m: any) => {
+      const currentMatch = matchesData.matches.find((m: Match) => {
         const start = new Date(m.startDate);
         const end = new Date(m.endDate);
         return today >= start && today <= end;
