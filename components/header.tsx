@@ -104,7 +104,7 @@ function NavLinks({ isActive, isAdmin, dropdown = false }: { isActive: (path: st
     { href: "/input", label: "Log Substance" },
     { href: "/schedule", label: "Schedule" },
     { href: "/standings", label: "Standings" },
-    { href: "/analytics/my-logs", label: "Analytics" },
+    { href: "/analytics", label: "Analytics" },
   ]
 
   if (isAdmin) {
