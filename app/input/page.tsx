@@ -26,7 +26,7 @@ interface Substance {
 export default function InputPage() {
   const { status } = useSession()
   const [substanceId, setSubstanceId] = useState<string>("")
-  const [quantity, setQuantity] = useState<number>(1)
+  const [quantity, setQuantity] = useState<string>("1")
   const [date, setDate] = useState<Date>(new Date())
   const [isLoading, setIsLoading] = useState(false)
   const [substances, setSubstances] = useState<Substance[]>([])
@@ -54,6 +54,8 @@ export default function InputPage() {
     }
   }, [status])
 
+  const isQuantityValid = Number.isInteger(Number(quantity)) && Number(quantity) > 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -67,7 +69,7 @@ export default function InputPage() {
         body: JSON.stringify({
           substanceId,
           date: date.toISOString(),
-          quantity: quantity
+          quantity: Number(quantity)
         }),
       })
 
@@ -128,8 +130,17 @@ export default function InputPage() {
               <Input
                 type="number"
                 min="1"
+                step="1"
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => setQuantity(e.target.value)}
+                onBlur={() => {
+                  const floored = Math.floor(Number(quantity));
+                  if (!isNaN(floored) && floored > 0) {
+                    setQuantity(String(floored));
+                  } else {
+                    setQuantity(""); // invalid or zero input
+                  }
+                }}
                 required
               />
             </div>
@@ -147,17 +158,21 @@ export default function InputPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar 
-                    mode="single" 
-                    selected={date} 
-                    onSelect={(date) => date && setDate(date)} 
-                    initialFocus 
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(date) => date && setDate(date)}
+                    initialFocus
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || !substanceId || !isQuantityValid}
+            >
               {isLoading ? "Submitting..." : "Submit"}
             </Button>
           </form>
