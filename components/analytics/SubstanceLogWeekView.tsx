@@ -158,6 +158,21 @@ export default function SubstanceLogWeekView() {
   const seasonOptions = [...new Set(matches.map(m => m.season))].sort((a, b) => a - b);
   const weeksInSeason = [...new Set(matches.filter(m => m.season === selectedSeason).map(m => m.weekNumber))].sort((a, b) => a - b);
 
+
+  const isAdmin = session?.user?.role === "admin";
+  const isCurrentMatchSelected =
+    matches.find((m) =>
+      m.season === selectedSeason &&
+      m.weekNumber === selectedWeek &&
+      new Date(m.startDate) <= new Date() &&
+      new Date(m.endDate) >= new Date()
+    ) !== undefined;
+  
+  const userId = session?.user?.id;
+  const visibleUserIds = isCurrentMatchSelected && !isAdmin
+    ? selectedUserIds.filter((id) => id === userId)
+    : selectedUserIds;
+
   return (
     <Card>
       <CardHeader>
@@ -165,13 +180,13 @@ export default function SubstanceLogWeekView() {
         <CardTitle className="mb-2">Substance Logs - Season {selectedSeason} Week {selectedWeek}</CardTitle>
 
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          {users.map((user, index) => (
+          {users.filter((user) => visibleUserIds.includes(user._id)).map((user, index) => (
             <Badge
               key={user._id}
               onClick={() => toggleUser(user._id)}
               className={cn(
                 "cursor-pointer px-3 py-1 text-sm",
-                selectedUserIds.includes(user._id)
+                visibleUserIds.includes(user._id)
                   ? "bg-primary text-white"
                   : "bg-muted text-muted-foreground"
               )}
@@ -191,7 +206,7 @@ export default function SubstanceLogWeekView() {
               )
             }
           >
-            {selectedUserIds.length === users.length ? "Deselect All" : "Select All"}
+            {visibleUserIds.length === users.length ? "Deselect All" : "Select All"}
           </Button>
 
           <div className="flex-grow" /> {/* pushes the next button to the end */}
@@ -232,70 +247,79 @@ export default function SubstanceLogWeekView() {
       </CardHeader>
 
       <CardContent>
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            {selectedUserIds.map((userId, i) => {
-              const user = users.find(u => u._id === userId)
-              return (
-                <Line
-                  key={userId}
-                  type="monotone"
-                  dataKey={userId}
-                  name={user?.name || userId}
-                  stroke={COLORS[i % COLORS.length]}
-                  strokeWidth={2}
-                />
-              )
-            })}
-          </LineChart>
-        </ResponsiveContainer>
+        {isCurrentMatchSelected && !isAdmin ? (
+          <div className="text-center text-muted-foreground py-10">
+            Data for the current match is not visible.
+          </div>
+        ) : (
+          <>
 
-        <Accordion type="multiple" className="mt-6">
-          {selectedUserIds.map((userId, i) => {
-            const user = users.find(u => u._id === userId);
-            const logs = logsByUser[userId] || [];
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                {visibleUserIds.map((userId, i) => {
+                  const user = users.find(u => u._id === userId)
+                  return (
+                    <Line
+                      key={userId}
+                      type="monotone"
+                      dataKey={userId}
+                      name={user?.name || userId}
+                      stroke={COLORS[i % COLORS.length]}
+                      strokeWidth={2}
+                    />
+                  )
+                })}
+              </LineChart>
+            </ResponsiveContainer>
 
-            return (
-              <AccordionItem key={userId} value={userId}>
-                <AccordionTrigger className="text-md font-semibold" style={{ color: COLORS[i % COLORS.length] }}>
-                  {user?.name}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Substance</TableHead>
-                          <TableHead>Points</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {logs.length > 0 ? logs.map((log, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>{format(parseISO(log.date), "PPP")}</TableCell>
-                            <TableCell>{log.substance}</TableCell>
-                            <TableCell>{log.points}</TableCell>
-                          </TableRow>
-                        )) : (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center text-muted-foreground">
-                              No logs for this week.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
+            <Accordion type="multiple" className="mt-6">
+              {visibleUserIds.map((userId, i) => {
+                const user = users.find(u => u._id === userId);
+                const logs = logsByUser[userId] || [];
+
+                return (
+                  <AccordionItem key={userId} value={userId}>
+                    <AccordionTrigger className="text-md font-semibold" style={{ color: COLORS[i % COLORS.length] }}>
+                      {user?.name}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="rounded-md border overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Substance</TableHead>
+                              <TableHead>Points</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {logs.length > 0 ? logs.map((log, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell>{format(parseISO(log.date), "PPP")}</TableCell>
+                                <TableCell>{log.substance}</TableCell>
+                                <TableCell>{log.points}</TableCell>
+                              </TableRow>
+                            )) : (
+                              <TableRow>
+                                <TableCell colSpan={3} className="text-center text-muted-foreground">
+                                  No logs for this week.
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          </>
+        )}
       </CardContent>
     </Card>
   );
